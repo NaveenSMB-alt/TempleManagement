@@ -1,0 +1,91 @@
+services:
+
+  # nginx:
+  #   container_name: temp_nginx
+  #   build:
+  #     context: .
+  #     dockerfile: Docker/nginx/Dockerfile
+  #   #volumes:
+  #   #  - /var/www/certbot:/var/www/certbot
+  #   #  - /etc/letsencrypt:/etc/letsencrypt
+  #   ports:
+  #     - "80:80"
+  #   #  - "443:443"
+  #   depends_on:
+  #     - nextjs
+  #     - django
+  #   networks:
+  #     - temp-network
+  
+  django:
+    container_name: temp_django
+    build:
+      context: .
+      dockerfile: Docker/django/Dockerfile
+    command: sh -c "python3 manage.py makemigrations && python3 manage.py migrate --noinput && python3 manage.py runserver 0.0.0.0:8000"
+    restart: always
+    volumes:
+      - "./WebBackend:/usr/src/app"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - temp-network  
+
+  nextjs:
+    container_name: temp_nextjs
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Docker/nextjs/Dockerfile
+    volumes:
+      - ./WebFrontend/temple-app:/usr/src/app  
+    ports:
+      - "3000:3000"
+    depends_on:
+      - django
+    command: sh -c "cd /usr/src/app && npm install && mkdir -p node_modules/.cache && chmod -R 777 node_modules/.cache && npm run dev"
+    networks:
+      - temp-network
+
+  db:
+    image: mysql:8.3
+    container_name: temp_mysql
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - Temp_data:/var/lib/mysql
+      - ./db_backup:/backup
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: >
+        /bin/bash -c "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD --silent"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - temp-network
+
+  #cron:
+  #  container_name: temp_cron
+  #  build:
+  #    context: .
+  #    dockerfile: Docker/cron/Dockerfile
+  #  volumes:
+  #    - Temp_backup_media:/backup/media
+  #    - ./CommonModule/media:/app/media
+  #  networks:
+  #    - temp-network
+  #  restart: always  
+
+volumes:
+  Temp_data:
+  #Temp_backup_media:
+
+networks:
+  temp-network:

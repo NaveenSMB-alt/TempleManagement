@@ -1,0 +1,37 @@
+# Ignore all Git files
+.git
+.gitignore
+
+# Ignore Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environments
+venv/
+env/
+ENV/
+
+# Ignore IDE and editor settings
+.vscode/
+.idea/
+
+# Ignore frontend build
+common_modules_frontend/.next/
+common_modules_frontend/node_modules/
+
+# Ignore Django static/media if they are large or generated
+CommonModule/static/
+CommonModule/media/
+
+# Ignore backups and logs
+*.log
+*.bak
+*.sql
+db_backup/
+
+# Optional: ignore Docker image artifacts
+*.tar
+
+

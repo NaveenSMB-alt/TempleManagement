@@ -1,0 +1,76 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+ 
+# C extensions
+*.so
+ 
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+media/
+staticfiles/
+.env
+.env.*
+ 
+# Django migrations (optional, if you want to regenerate them)
+*/migrations/__pycache__/
+*/migrations/*.pyc
+*/migrations/*.pyo
+*/migrations/*.pyd
+ 
+# Node modules (Next.js frontend)
+WebFrontend/temple-app/node_modules/
+WebFrontend/temple-app/.next/
+WebFrontend/temple-app/.env.local
+WebFrontend/temple-app/.env.production
+WebFrontend/temple-app/.env.development
+WebFrontend/temple-app/.turbo/
+ 
+# Build output
+dist/
+build/
+ 
+# OS files
+.DS_Store
+Thumbs.db
+ 
+# IDEs and editors
+.vscode/
+.idea/
+ 
+# Docker artifacts
+*.tar
+docker-compose.override.yml
+db_backup/
+ 
+# GitHub codespaces / VS Code Devcontainers
+.devcontainer/
+ 
+# Coverage reports
+htmlcov/
+coverage.xml
+*.cover
+*.py,cover
+ 
+# pytest
+.cache/
+ 
+# MyPy
+.mypy_cache/
+ 
+# Pylint
+.pylint.d/
+ 
+# Pipenv
+Pipfile.lock
+ 
+# macOS system files
+Icon?
+ 
+ 

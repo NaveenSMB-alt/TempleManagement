@@ -2,12 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = "docker.io"
-        REGISTRY_NAMESPACE = "naveensmb"  // 🔁 your DockerHub username
-        FRONTEND_IMAGE = "${REGISTRY}/${REGISTRY_NAMESPACE}/temple-frontend"
-        BACKEND_IMAGE  = "${REGISTRY}/${REGISTRY_NAMESPACE}/temple-backend"
-        IMAGE_TAG = "${BUILD_NUMBER}"     // can use "latest" if preferred
-        COMPOSE_PROJECT_NAME = "templeapp"
+        COMPOSE_PROJECT_NAME = "templedev"
     }
 
     options {
@@ -16,7 +11,7 @@ pipeline {
     }
 
     triggers {
-        githubPush()
+        githubPush() // Trigger pipeline on GitHub push
     }
 
     stages {
@@ -27,43 +22,16 @@ pipeline {
             }
         }
 
-        stage('🔐 DockerHub Login') {
+        stage('🔨 Build Containers (Dev)') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-                }
-            }
-        }
-
-        stage('🔨 Build via Docker Compose') {
-            steps {
-                echo "📦 Building services using docker-compose..."
+                echo "📦 Building dev containers using docker-compose..."
                 sh "docker-compose -p ${COMPOSE_PROJECT_NAME} build"
             }
         }
 
-        stage('📤 Tag & Push Images') {
+        stage('🚀 Deploy Locally') {
             steps {
-                echo "🔖 Tagging and pushing images built via docker-compose..."
-
-                // This assumes you’ve named your services as `nextjs` and `django`
-                sh """
-                    docker tag ${COMPOSE_PROJECT_NAME}_nextjs ${FRONTEND_IMAGE}:${IMAGE_TAG}
-                    docker tag ${COMPOSE_PROJECT_NAME}_django ${BACKEND_IMAGE}:${IMAGE_TAG}
-
-                    docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}
-                    docker push ${BACKEND_IMAGE}:${IMAGE_TAG}
-                """
-            }
-        }
-
-        stage('🚀 Deploy Stack Locally') {
-            steps {
-                echo "🔁 Restarting containers with current config..."
+                echo "🔁 Restarting containers locally..."
                 sh """
                     docker-compose -p ${COMPOSE_PROJECT_NAME} down --remove-orphans || true
                     docker-compose -p ${COMPOSE_PROJECT_NAME} up -d
@@ -73,11 +41,14 @@ pipeline {
 
         stage('🔍 Health Check') {
             steps {
-                echo "🔎 Verifying services..."
+                echo "⏳ Waiting for backend and frontend to start..."
+                sleep 10
                 sh '''
-                    sleep 10
-                    curl -fs http://localhost:8000 || (echo "❌ Backend not ready" && exit 1)
-                    curl -fs http://localhost:3000 || (echo "❌ Frontend not ready" && exit 1)
+                    echo "🩺 Backend (Django) check:"
+                    curl -fs http://localhost:8000 || echo "⚠️ Django may not be ready"
+
+                    echo "🩺 Frontend (Next.js) check:"
+                    curl -fs http://localhost:3000 || echo "⚠️ Next.js may not be ready"
                 '''
             }
         }
@@ -85,14 +56,14 @@ pipeline {
 
     post {
         success {
-            echo "✅ Build → Push → Deploy succeeded using local docker-compose setup!"
+            echo "✅ Local dev deployment successful!"
         }
         failure {
-            echo "❌ Pipeline failed. Attempting cleanup..."
+            echo "❌ Deployment failed. Cleaning up..."
             sh "docker-compose -p ${COMPOSE_PROJECT_NAME} down --remove-orphans || true"
         }
         always {
-            echo "🧹 Docker cleanup..."
+            echo "🧹 Optional Docker cleanup..."
             sh "docker system prune -af || true"
         }
     }

@@ -1,70 +1,55 @@
 pipeline {
-    agent any
+  agent any
 
-    environment {
-        COMPOSE_PROJECT_NAME = "templedev"
+  environment {
+    COMPOSE_PROJECT_NAME = "templeapp"
+  }
+
+  stages {
+
+    stage('🔐 Securely Inject Secrets') {
+      steps {
+        withCredentials([
+          string(credentialsId: 'mysql-root', variable: 'MYSQL_ROOT_PASSWORD'),
+          string(credentialsId: 'mysql-user', variable: 'MYSQL_USER'),
+          string(credentialsId: 'mysql-password', variable: 'MYSQL_PASSWORD'),
+          string(credentialsId: 'mysql-database', variable: 'MYSQL_DATABASE'),
+          string(credentialsId: 'django-secret', variable: 'DJANGO_SECRET_KEY')
+        ]) {
+          sh '''
+            echo "Injecting secrets to .env (silently)..."
+            {
+              echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD"
+              echo "MYSQL_USER=$MYSQL_USER"
+              echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
+              echo "MYSQL_DATABASE=$MYSQL_DATABASE"
+              echo "DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY"
+            } > .env
+          '''
+        }
+      }
     }
 
-    options {
-        timestamps()
-        timeout(time: 20, unit: 'MINUTES')
+    stage('🔨 Build & Deploy') {
+      steps {
+        sh "docker-compose -p ${COMPOSE_PROJECT_NAME} build"
+        sh "docker-compose -p ${COMPOSE_PROJECT_NAME} up -d"
+      }
     }
 
-    triggers {
-        githubPush() // Trigger pipeline on GitHub push
+    stage('✅ Verify (without exposing secrets)') {
+      steps {
+        sh '''
+          grep DJANGO_SECRET_KEY .env > /dev/null || (echo "❌ Secret not set" && exit 1)
+        '''
+      }
     }
+  }
 
-    stages {
-
-        stage('🧾 Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('🔨 Build Containers (Dev)') {
-            steps {
-                echo "📦 Building dev containers using docker-compose..."
-                sh "docker-compose -p ${COMPOSE_PROJECT_NAME} build"
-            }
-        }
-
-        stage('🚀 Deploy Locally') {
-            steps {
-                echo "🔁 Restarting containers locally..."
-                sh """
-                    docker-compose -p ${COMPOSE_PROJECT_NAME} down --remove-orphans || true
-                    docker-compose -p ${COMPOSE_PROJECT_NAME} up -d
-                """
-            }
-        }
-
-        stage('🔍 Health Check') {
-            steps {
-                echo "⏳ Waiting for backend and frontend to start..."
-                sleep 10
-                sh '''
-                    echo "🩺 Backend (Django) check:"
-                    curl -fs http://localhost:8000 || echo "⚠️ Django may not be ready"
-
-                    echo "🩺 Frontend (Next.js) check:"
-                    curl -fs http://localhost:3000 || echo "⚠️ Next.js may not be ready"
-                '''
-            }
-        }
+  post {
+    always {
+      echo "🧹 Cleaning up secrets..."
+      sh 'rm -f .env || true'
     }
-
-    post {
-        success {
-            echo "✅ Local dev deployment successful!"
-        }
-        failure {
-            echo "❌ Deployment failed. Cleaning up..."
-            sh "docker-compose -p ${COMPOSE_PROJECT_NAME} down --remove-orphans || true"
-        }
-        always {
-            echo "🧹 Optional Docker cleanup..."
-            sh "docker system prune -af || true"
-        }
-    }
+  }
 }

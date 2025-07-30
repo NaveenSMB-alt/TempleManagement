@@ -68,7 +68,7 @@ pipeline {
       steps {
         echo "Checking service availability after 20 seconds..."
         sh '''
-          sleep 20
+          sleep 40
           curl -fs http://localhost:8000 || (echo "❌ Backend not ready" && exit 1)
           curl -fs http://localhost:3000 || (echo "❌ Frontend not ready" && exit 1)
         '''

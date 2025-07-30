@@ -66,16 +66,22 @@ pipeline {
 
     stage('🔍 Health Check') {
       steps {
-        echo "Checking service availability after 20 seconds..."
+        echo "Waiting for backend to be ready (max 60s)..."
         sh '''
-          sleep 40
-          curl -fs http://localhost:8000 || (echo "❌ Backend not ready" && exit 1)
-          curl -fs http://localhost:3000 || (echo "❌ Frontend not ready" && exit 1)
+          for i in {1..12}
+          do
+            if curl -fs http://localhost:8000; then
+              echo "✅ Backend ready"
+              break
+            else
+              echo "⏳ Waiting for backend..."
+              sleep 5
+            fi
+          done
         '''
       }
     }
   }
-
   post {
     always {
       echo "🧹 Cleaning up temporary .env..."

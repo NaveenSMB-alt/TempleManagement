@@ -28,6 +28,9 @@ pipeline {
           string(credentialsId: 'django-secret-key', variable: 'SECRET_KEY'),
           string(credentialsId: 'debug-flag', variable: 'DEBUG'),
           string(credentialsId: 'allowed-hosts', variable: 'ALLOWED_HOSTS'),
+          string(credentialsId: 'DB_HOST', variable: 'DB_HOST'),
+          string(credentialsId: 'DB_PORT', variable: 'DB_PORT'),
+
           string(credentialsId: 'mysql-root', variable: 'MYSQL_ROOT_PASSWORD'),
           string(credentialsId: 'mysql-user', variable: 'MYSQL_USER'),
           string(credentialsId: 'mysql-password', variable: 'MYSQL_PASSWORD'),
@@ -37,6 +40,8 @@ pipeline {
             echo "SECRET_KEY=$SECRET_KEY" > .env
             echo "DEBUG=$DEBUG" >> .env
             echo "ALLOWED_HOSTS=$ALLOWED_HOSTS" >> .env
+            echo "DB_HOST=$DB_HOST" >> .env
+            echo "DB_PORT=$DB_PORT" >> .env
 
             echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" >> .env
             echo "MYSQL_USER=$MYSQL_USER" >> .env

@@ -42,6 +42,9 @@ pipeline {
             echo "ALLOWED_HOSTS=$ALLOWED_HOSTS" >> .env
             echo "DB_HOST=$DB_HOST" >> .env
             echo "DB_PORT=$DB_PORT" >> .env
+            echo "DB_NAME=$MYSQL_DATABASE" >> .env
+            echo "DB_USER=$MYSQL_USER" >> .env
+            echo "DB_PASSWORD=$MYSQL_PASSWORD" >> .env
 
             echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" >> .env
             echo "MYSQL_USER=$MYSQL_USER" >> .env

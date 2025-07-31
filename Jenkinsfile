@@ -25,7 +25,7 @@ pipeline {
     stage('🔐 Securely Inject Secrets to .env') {
       steps {
         withCredentials([
-          string(credentialsId: 'django-secret', variable: 'DJANGO_SECRET_KEY'),
+          string(credentialsId: 'django-secret-key', variable: 'SECRET_KEY'),
           string(credentialsId: 'debug-flag', variable: 'DEBUG'),
           string(credentialsId: 'allowed-hosts', variable: 'ALLOWED_HOSTS'),
           string(credentialsId: 'mysql-root', variable: 'MYSQL_ROOT_PASSWORD'),
@@ -34,7 +34,7 @@ pipeline {
           string(credentialsId: 'mysql-database', variable: 'MYSQL_DATABASE')
         ]) {
           sh '''
-            echo "SECRET_KEY=$DJANGO_SECRET_KEY" > .env
+            echo "SECRET_KEY=$SECRET_KEY" > .env
             echo "DEBUG=$DEBUG" >> .env
             echo "ALLOWED_HOSTS=$ALLOWED_HOSTS" >> .env
 

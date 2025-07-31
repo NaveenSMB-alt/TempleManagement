@@ -19,6 +19,8 @@ services:
   
   django:
     container_name: temp_django
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: Docker/django/Dockerfile
